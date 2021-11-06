@@ -14,160 +14,33 @@
             });
     </script>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
-    <style type="text/css">
-        .form-style-8 {
-            font-family: 'Open Sans Condensed', arial, sans;
-            width: 500px;
-            padding: 30px;
-            background: #FFFFFF;
-            margin: 50px auto;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
-            -moz-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
-            -webkit-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
-
-        }
-
-        .form-style-8 h2 {
-            background: #4D4D4D;
-            text-transform: uppercase;
-            font-family: 'Open Sans Condensed', sans-serif;
-            color: #797979;
-            font-size: 18px;
-            font-weight: 100;
-            padding: 20px;
-            margin: -30px -30px 30px -30px;
-        }
-
-        .form-style-8 input[type="text"],
-        .form-style-8 input[type="date"],
-        .form-style-8 input[type="datetime"],
-        .form-style-8 input[type="email"],
-        .form-style-8 input[type="number"],
-        .form-style-8 input[type="search"],
-        .form-style-8 input[type="time"],
-        .form-style-8 input[type="url"],
-        .form-style-8 input[type="password"],
-        .form-style-8 textarea,
-        .form-style-8 select {
-            box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            outline: none;
-            display: block;
-            width: 100%;
-            padding: 7px;
-            border: none;
-            border-bottom: 1px solid #ddd;
-            background: transparent;
-            margin-bottom: 10px;
-            font: 16px Arial, Helvetica, sans-serif;
-            height: 45px;
-        }
-
-        .form-style-8 textarea {
-            resize: none;
-            overflow: hidden;
-        }
-
-        .form-style-8 input[type="button"],
-        .form-style-8 input[type="submit"] {
-            -moz-box-shadow: inset 0px 1px 0px 0px #45D6D6;
-            -webkit-box-shadow: inset 0px 1px 0px 0px #45D6D6;
-            box-shadow: inset 0px 1px 0px 0px #45D6D6;
-            background-color: #2CBBBB;
-            border: 1px solid #27A0A0;
-            display: inline-block;
-            cursor: pointer;
-            color: #FFFFFF;
-            font-family: 'Open Sans Condensed', sans-serif;
-            font-size: 14px;
-            padding: 8px 18px;
-            text-decoration: none;
-            text-transform: uppercase;
-        }
-
-        .form-style-8 input[type="button"]:hover,
-        .form-style-8 input[type="submit"]:hover {
-            background: linear-gradient(to bottom, #34CACA 5%, #30C9C9 100%);
-            background-color: #34CACA;
-        }
-
-        .button-32 {
-            background-color: #fff000;
-            border-radius: 12px;
-            color: #000;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 10px 15px;
-            text-align: center;
-            transition: 200ms;
-            width: 100%;
-            box-sizing: border-box;
-            border: 0;
-            font-size: 16px;
-            color: #797979;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-
-        .button-32:not(:disabled):hover,
-        .button-32:not(:disabled):focus {
-            outline: 0;
-            background: #f4e603;
-            box-shadow: 0 0 0 2px rgba(0, 0, 0, .2), 0 3px 8px 0 rgba(0, 0, 0, .15);
-        }
-
-        .button-32:disabled {
-            filter: saturate(0.2) opacity(0.5);
-            cursor: not-allowed;
-        }
-
-        .secret-image {
-            padding: 10px;
-        }
-
-        .disabled {
-            opacity: 0.3;
-            pointer-events: none;
-        }
-    </style>
+    <link href='./style.css' rel='stylesheet' type='text/css'>
 </head>
 
 <body>
-    <div class="form-style-8">
+    <div class="form-style-8" style="display: block;">
         <h2>Decode your secret</h2>
-        <!--<form>-->
         <button class="button-32" role="button" onclick="openFileDalog()">Open secret's file</button>
         <img class="secret-image" width="95%"></img>
-        <input id="filter" type="text" name="filter" placeholder="Filter" onen="processFilter()"></input>
+        <input id="filter" type="text" name="filter" placeholder="Filter"></input>
         <input type="password" id="seed" name="seed" placeholder="Seed"></input>
-        <textarea id="wl" class="disabled" placeholder="Words' list" onkeyup="adjust_textarea(this)"></textarea>
-        <input type="button" value="Decode" onclick="processDecode()"></input>
-        <!--</form>-->
+        <p>
+            <input type="checkbox" onclick="toggleSeedView()">View Seed</input></input>
+        </p>
+        <div class="wordsList"></div>
+        <button class="button-32" role="button" onclick="processDecode()">Decode</input>
     </div>
-
-    <script type="text/javascript">
-        //auto expand textarea
-        function adjust_textarea(h) {
-            h.style.height = "20px";
-            h.style.height = (h.scrollHeight) + "px";
-        }
-    </script>
 
     <script>
         const secretFileBtn = document.querySelector('.button-32');
         const secretImage = document.querySelector('.secret-image');
         const filter = document.querySelector('#filter');
         const seed = document.querySelector('#seed');
-        const wordsList = document.querySelector('#wl')
+        const wordsList = document.querySelector('.wordsList');
+
+        const errMsg = "W2P ERROR:";
 
         var binaryContent;
-
-        // We use async/await because Go functions are asynchronous
-        const render = async () => {
-            //counter.innerText = `Count: ${await window.counterValue()}`;
-        };
 
         function openFileDalog() {
             let input = document.createElement('input');
@@ -176,19 +49,20 @@
                 // you can use this method to get file and perform respective operations
                 let files = Array.from(input.files);
                 console.log(files);
-                readSecretFile(files);
-                secretImage.src = URL.createObjectURL(files[0]);
+                // no file selected to read
+                if (files.length == 0) {
+                    console.log('No file selected');
+                    return;
+                }
+                var file = files[0];
+                readSecretFile(file);
+                secretImage.src = URL.createObjectURL(file);
+
             };
             input.click();
         }
 
-        function readSecretFile(files) {
-            // no file selected to read
-            if (files.length == 0) {
-                console.log('No file selected');
-                return;
-            }
-            var file = files[0];
+        function readSecretFile(file) {
             var reader = new FileReader();
             reader.onload = function (e) {
                 // binary data
@@ -199,16 +73,48 @@
                 console.log('Error : ' + e.type);
             };
             reader.readAsArrayBuffer(file);
+
+            // empty previous decoded data
+            reset();
         }
 
         function processDecode() {
-            console.log(binaryContent);
+            reset();
+
+            // decode the secret image
             var u8a = new Uint8Array(binaryContent);
-            console.log(u8a);
-           alert(decode(u8a , filter.value, seed.value));
+            decoded = decode(u8a, filter.value, seed.value);
+            if (decoded.startsWith(errMsg)) {
+                alert(decoded);
+                return;
+            }
+            wlArray = JSON.parse(decoded);
+
+            // build decoded content view
+            const ul = document.createElement('ul');
+            ul.setAttribute('class', 'aword');
+            for (i = 0; i <= wlArray.length - 1; i++) {
+                const li = document.createElement('li');
+                li.innerHTML = wlArray[i];
+                ul.appendChild(li);
+            }
+            wordsList.appendChild(ul);
+
+            // display decoded content
+            wordsList.style.display = 'block';
         }
 
-        render();
+        function reset() {
+            wordsList.innerHTML = '';
+        }
+
+        function toggleSeedView() {
+            if (seed.type === "password") {
+                seed.type = "text";
+            } else {
+                seed.type = "password";
+            }
+        }
     </script>
 </body>
 
