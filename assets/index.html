@@ -1,0 +1,215 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <!-- Cargar los scripts de WASM--->
+    <script src="./wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        console.log("Cargando el archivo main.wasm");
+        WebAssembly.instantiateStreaming(fetch("./world2png.wasm"), go.importObject)
+            .then((result) => {
+                console.log("Carga completa");
+                go.run(result.instance);
+            });
+    </script>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+        .form-style-8 {
+            font-family: 'Open Sans Condensed', arial, sans;
+            width: 500px;
+            padding: 30px;
+            background: #FFFFFF;
+            margin: 50px auto;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
+            -moz-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
+            -webkit-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
+
+        }
+
+        .form-style-8 h2 {
+            background: #4D4D4D;
+            text-transform: uppercase;
+            font-family: 'Open Sans Condensed', sans-serif;
+            color: #797979;
+            font-size: 18px;
+            font-weight: 100;
+            padding: 20px;
+            margin: -30px -30px 30px -30px;
+        }
+
+        .form-style-8 input[type="text"],
+        .form-style-8 input[type="date"],
+        .form-style-8 input[type="datetime"],
+        .form-style-8 input[type="email"],
+        .form-style-8 input[type="number"],
+        .form-style-8 input[type="search"],
+        .form-style-8 input[type="time"],
+        .form-style-8 input[type="url"],
+        .form-style-8 input[type="password"],
+        .form-style-8 textarea,
+        .form-style-8 select {
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            outline: none;
+            display: block;
+            width: 100%;
+            padding: 7px;
+            border: none;
+            border-bottom: 1px solid #ddd;
+            background: transparent;
+            margin-bottom: 10px;
+            font: 16px Arial, Helvetica, sans-serif;
+            height: 45px;
+        }
+
+        .form-style-8 textarea {
+            resize: none;
+            overflow: hidden;
+        }
+
+        .form-style-8 input[type="button"],
+        .form-style-8 input[type="submit"] {
+            -moz-box-shadow: inset 0px 1px 0px 0px #45D6D6;
+            -webkit-box-shadow: inset 0px 1px 0px 0px #45D6D6;
+            box-shadow: inset 0px 1px 0px 0px #45D6D6;
+            background-color: #2CBBBB;
+            border: 1px solid #27A0A0;
+            display: inline-block;
+            cursor: pointer;
+            color: #FFFFFF;
+            font-family: 'Open Sans Condensed', sans-serif;
+            font-size: 14px;
+            padding: 8px 18px;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .form-style-8 input[type="button"]:hover,
+        .form-style-8 input[type="submit"]:hover {
+            background: linear-gradient(to bottom, #34CACA 5%, #30C9C9 100%);
+            background-color: #34CACA;
+        }
+
+        .button-32 {
+            background-color: #fff000;
+            border-radius: 12px;
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 10px 15px;
+            text-align: center;
+            transition: 200ms;
+            width: 100%;
+            box-sizing: border-box;
+            border: 0;
+            font-size: 16px;
+            color: #797979;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .button-32:not(:disabled):hover,
+        .button-32:not(:disabled):focus {
+            outline: 0;
+            background: #f4e603;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, .2), 0 3px 8px 0 rgba(0, 0, 0, .15);
+        }
+
+        .button-32:disabled {
+            filter: saturate(0.2) opacity(0.5);
+            cursor: not-allowed;
+        }
+
+        .secret-image {
+            padding: 10px;
+        }
+
+        .disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-style-8">
+        <h2>Decode your secret</h2>
+        <!--<form>-->
+        <button class="button-32" role="button" onclick="openFileDalog()">Open secret's file</button>
+        <img class="secret-image" width="95%"></img>
+        <input id="filter" type="text" name="filter" placeholder="Filter" onen="processFilter()"></input>
+        <input type="password" id="seed" name="seed" placeholder="Seed"></input>
+        <textarea id="wl" class="disabled" placeholder="Words' list" onkeyup="adjust_textarea(this)"></textarea>
+        <input type="button" value="Decode" onclick="processDecode()"></input>
+        <!--</form>-->
+    </div>
+
+    <script type="text/javascript">
+        //auto expand textarea
+        function adjust_textarea(h) {
+            h.style.height = "20px";
+            h.style.height = (h.scrollHeight) + "px";
+        }
+    </script>
+
+    <script>
+        const secretFileBtn = document.querySelector('.button-32');
+        const secretImage = document.querySelector('.secret-image');
+        const filter = document.querySelector('#filter');
+        const seed = document.querySelector('#seed');
+        const wordsList = document.querySelector('#wl')
+
+        var binaryContent;
+
+        // We use async/await because Go functions are asynchronous
+        const render = async () => {
+            //counter.innerText = `Count: ${await window.counterValue()}`;
+        };
+
+        function openFileDalog() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = function () {
+                // you can use this method to get file and perform respective operations
+                let files = Array.from(input.files);
+                console.log(files);
+                readSecretFile(files);
+                secretImage.src = URL.createObjectURL(files[0]);
+            };
+            input.click();
+        }
+
+        function readSecretFile(files) {
+            // no file selected to read
+            if (files.length == 0) {
+                console.log('No file selected');
+                return;
+            }
+            var file = files[0];
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                // binary data
+                binaryContent = e.target.result;
+            };
+            reader.onerror = function (e) {
+                // error occurred
+                console.log('Error : ' + e.type);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processDecode() {
+            console.log(binaryContent);
+            var u8a = new Uint8Array(binaryContent);
+            console.log(u8a);
+           alert(decode(u8a , filter.value, seed.value));
+        }
+
+        render();
+    </script>
+</body>
+
+</html>
